@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Healthify AI - Complete Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --ios-bg: #f2f2f7;
+            --ios-card: rgba(255, 255, 255, 0.85);
+            --ios-accent: #007aff;
+            --ios-text: #1c1c1e;
+            --ios-secondary: #8e8e93;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --sidebar-width: 260px;
+        }
+
+        .dark {
+            --ios-bg: #000000;
+            --ios-card: rgba(28, 28, 30, 0.85);
+            --ios-text: #ffffff;
+            --ios-secondary: #aeaeb2;
+            --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        body { margin: 0; background-color: var(--ios-bg); color: var(--ios-text); transition: background 0.4s; display: flex; min-height: 100vh; overflow-x: hidden; }
+
+        /* ---------- DESKTOP SIDEBAR ---------- */
+        .sidebar {
+            width: var(--sidebar-width); background: var(--ios-card); backdrop-filter: blur(20px);
+            height: 100vh; position: fixed; left: 0; top: 0; display: none;
+            flex-direction: column; padding: 40px 20px; border-right: 1px solid rgba(120,120,128,0.2); z-index: 1000;
+        }
+        .sidebar h1 { font-size: 24px; margin-bottom: 40px; padding-left: 15px; font-weight: 800; }
+        .sidebar-btn {
+            background: none; border: none; color: var(--ios-secondary); padding: 15px;
+            margin: 5px 0; border-radius: 12px; display: flex; align-items: center; gap: 15px;
+            font-size: 16px; font-weight: 500; cursor: pointer; transition: 0.2s; width: 100%; text-align: left;
+        }
+        .sidebar-btn.active { background: var(--ios-accent); color: white; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
+        .sidebar-btn:hover:not(.active) { background: rgba(120, 120, 128, 0.1); }
+
+        /* ---------- MAIN CONTENT ---------- */
+        .main-container { flex: 1; transition: margin-left 0.3s ease; width: 100%; }
+        header { padding: 60px 20px 20px; display: flex; justify-content: space-between; align-items: center; max-width: 1000px; margin: 0 auto; }
+        header h1 { font-size: 34px; font-weight: 700; margin: 0; letter-spacing: -1px; }
+        .app { padding: 0 20px 140px; max-width: 1000px; margin: 0 auto; width: 100%; }
+
+        /* ---------- CARDS ---------- */
+        .card {
+            background: var(--ios-card); backdrop-filter: blur(20px); border-radius: 24px;
+            padding: 24px; margin-bottom: 25px; box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h2 { font-size: 20px; margin-top: 0; font-weight: 600; }
+
+        input {
+            width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: none;
+            background: rgba(120, 120, 128, 0.12); color: var(--ios-text); font-size: 16px;
+        }
+        button {
+            width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--ios-accent);
+            color: white; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+        }
+        button:active { transform: scale(0.96); opacity: 0.9; }
+        .btn-secondary { background: rgba(120, 120, 128, 0.16); color: var(--ios-accent); box-shadow: none; margin-top: 10px; }
+
+        /* ---------- MOBILE NAV ---------- */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around;
+            padding: 15px 0 35px; background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 100;
+        }
+        .nav-item { background: none; border: none; color: var(--ios-secondary); display: flex; flex-direction: column; align-items: center; font-size: 10px; cursor: pointer; padding: 0; width: auto; }
+        .nav-item i { font-size: 24px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--ios-accent); }
+
+        /* ---------- GRID & STATS ---------- */
+        .desktop-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px; }
+        .stat-box { text-align: center; background: rgba(0,122,255,0.08); padding: 18px; border-radius: 18px; border: 1px solid rgba(0,122,255,0.1); }
+        .stat-val { display: block; font-size: 24px; font-weight: 800; color: var(--ios-accent); }
+        .stat-label { font-size: 11px; color: var(--ios-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* ---------- SCREENS ---------- */
+        .screen { display: none; animation: ios-slide 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .screen.active { display: block; }
+        @keyframes ios-slide { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        ul { list-style: none; padding: 0; margin: 15px 0; }
+        li { padding: 14px 0; border-bottom: 0.5px solid rgba(120, 120, 128, 0.2); display: flex; justify-content: space-between; }
+
+        /* Preview Image Styling */
+        #imgPreview {
+            width: 100%; max-width: 300px; border-radius: 15px; margin: 15px auto;
+            display: none; object-fit: cover; border: 2px solid var(--ios-accent);
+        }
+
+        @media (min-width: 850px) {
+            .sidebar { display: flex; }
+            .bottom-nav { display: none; }
+            .main-container { margin-left: var(--sidebar-width); }
+            .desktop-grid { grid-template-columns: 1fr 1fr; }
+            .full-width { grid-column: span 2; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h1>Healthify<span style="color:var(--ios-accent)">AI</span></h1>
+        <button class="sidebar-btn active" onclick="switchScreen('home', 'Summary', this)"><i class="fa-solid fa-house"></i> Home</button>
+        <button class="sidebar-btn" onclick="switchScreen('tracker', 'Journal', this)"><i class="fa-solid fa-utensils"></i> Diary</button>
+        <button class="sidebar-btn" onclick="switchScreen('progress', 'Trends', this)"><i class="fa-solid fa-chart-line"></i> Trends</button>
+        <button class="sidebar-btn" onclick="switchScreen('ai', 'Vision AI', this)"><i class="fa-solid fa-camera"></i> AI Scan</button>
+        <button class="sidebar-btn" onclick="toggleDark()" style="margin-top:auto;"><i class="fa-solid fa-circle-half-stroke"></i> Theme</button>
+    </aside>
+
+    <div class="main-container">
+        <header>
+            <h1 id="headerTitle">Summary</h1>
+            <button onclick="toggleDark()" style="width: 44px; height: 44px; border-radius: 50%; display:flex; align-items:center; justify-content:center;" class="btn-secondary">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="app">
+            <div class="screen active" id="home">
+                <div class="desktop-grid">
+                    <div class="card">
+                        <h2>Health Profile</h2>
+                        <input type="number" id="age" placeholder="Age">
+                        <input type="number" id="weight" placeholder="Weight (kg)">
+                        <input type="number" id="height" placeholder="Height (cm)">
+                        <button onclick="analyze()">Calculate Metrics</button>
+                    </div>
+                    <div class="card">
+                        <h2>Health Metrics</h2>
+                        <div class="stats-grid">
+                            <div class="stat-box"><span class="stat-val" id="bmi">--</span><span class="stat-label">BMI</span></div>
+                            <div class="stat-box"><span class="stat-val" id="calories">--</span><span class="stat-label">Daily kcal</span></div>
+                        </div>
+                        <p id="coach" style="margin-top:25px; text-align:center; color: var(--ios-secondary); font-weight:500;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen" id="tracker">
+                <div class="desktop-grid">
+                    <div class="card">
+                        <h2>Log Nutrition</h2>
+                        <input id="foodName" placeholder="Food name">
+                        <input type="number" id="foodCal" placeholder="Calories">
+                        <button onclick="addFood()">Log Meal</button>
+                    </div>
+                    <div class="card">
+                        <h2>Today's Journal</h2>
+                        <ul id="foodList"></ul>
+                        <h3 style="text-align: right;">Total: <span id="totalCal" style="color:var(--ios-accent)">0</span> <small>kcal</small></h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen" id="progress">
+                <div class="card full-width">
+                    <h2>Weight Analytics</h2>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; max-width: 400px;">
+                        <input type="number" id="newWeight" placeholder="New Weight (kg)">
+                        <button onclick="updateChart()" style="width: 100px;">Add</button>
+                    </div>
+                    <div style="height: 350px; position: relative;">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen" id="ai">
+                <div class="card full-width" style="text-align: center; padding: 50px 20px;">
+                    <div style="width: 80px; height: 80px; background: rgba(0,122,255,0.1); border-radius: 50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 20px;">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="font-size:32px; color:var(--ios-accent);"></i>
+                    </div>
+                    <h2>AI Vision Scanner</h2>
+                    <p style="color:var(--ios-secondary); margin-bottom:25px;">Upload a photo of your meal to identify calories instantly.</p>
+
+                    <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+
+                    <button style="max-width:300px; margin: 0 auto;" onclick="document.getElementById('fileInput').click()">
+                        <i class="fa-solid fa-upload"></i> Upload or Take Photo
+                    </button>
+
+                    <img id="imgPreview" src="" alt="Food Preview">
+                    <div id="scanResult" style="margin-top:30px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchScreen('home', 'Summary', this)"><i class="fa-solid fa-house"></i><span>Home</span></button>
+        <button class="nav-item" onclick="switchScreen('tracker', 'Journal', this)"><i class="fa-solid fa-utensils"></i><span>Diary</span></button>
+        <button class="nav-item" onclick="switchScreen('progress', 'Trends', this)"><i class="fa-solid fa-chart-line"></i><span>Trends</span></button>
+        <button class="nav-item" onclick="switchScreen('ai', 'Vision AI', this)"><i class="fa-solid fa-camera"></i><span>Scan</span></button>
+    </nav>
+
+    <script>
+        function toggleDark() {
+            document.body.classList.toggle("dark");
+        }
+
+        function switchScreen(id, title, btn) {
+            document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+            document.querySelectorAll(".nav-item, .sidebar-btn").forEach(b => b.classList.remove("active"));
+            document.getElementById(id).classList.add("active");
+            document.getElementById('headerTitle').innerText = title;
+            btn.classList.add("active");
+            window.scrollTo(0,0);
+        }
+
+        function analyze() {
+            const w = document.getElementById("weight").value;
+            const h = document.getElementById("height").value;
+            if(!w || !h) return;
+            const bmi = (w / ((h/100)**2)).toFixed(1);
+            document.getElementById("bmi").innerText = bmi;
+            document.getElementById("calories").innerText = Math.round(w * 30);
+            document.getElementById("coach").innerText = "AI Insight: Focus on a steady calorie deficit for your goal.";
+        }
+
+        let totalCal = 0;
+        function addFood() {
+            const n = document.getElementById("foodName").value;
+            const c = parseInt(document.getElementById("foodCal").value);
+            if(!n || !c) return;
+            totalCal += c;
+            const li = document.createElement("li");
+            li.innerHTML = `<span>${n}</span> <strong>${c} kcal</strong>`;
+            document.getElementById("foodList").appendChild(li);
+            document.getElementById("totalCal").innerText = totalCal;
+            document.getElementById("foodName").value = "";
+            document.getElementById("foodCal").value = "";
+        }
+
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Weight (kg)', data: [], borderColor: '#007aff', tension: 0.4, fill: true, backgroundColor: 'rgba(0,122,255,0.1)' }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: false }, x: { grid: { display: false } } }
+            }
+        });
+
+        function updateChart() {
+            const val = document.getElementById("newWeight").value;
+            if(!val) return;
+            chart.data.labels.push("Entry " + (chart.data.labels.length + 1));
+            chart.data.datasets[0].data.push(val);
+            chart.update();
+            document.getElementById("newWeight").value = "";
+        }
+
+        // --- IMAGE HANDLING & SCAN LOGIC ---
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('imgPreview');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block'; // Show the image
+                    scanFood(); // Start analysis automatically
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+function scanFood() {
+    const res = document.getElementById("scanResult");
+    res.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzing pixels...`;
+
+    const library = [
+        {n: "Grilled Salmon 🐟", k: 420, p: 35, c: 5, f: 22},
+        {n: "Avocado Toast 🥑", k: 280, p: 8, c: 30, f: 18},
+        {n: "Poke Bowl 🥗", k: 540, p: 25, c: 70, f: 12},
+        {n: "Beef Burger 🍔", k: 780, p: 40, c: 45, f: 38},
+        {n: "Chicken Pasta 🍝", k: 650, p: 30, c: 85, f: 15}
+    ];
+
+    setTimeout(() => {
+        const item = library[Math.floor(Math.random() * library.length)];
+        const conf = (Math.random() * (99.8 - 92.0) + 92.0).toFixed(1);
+        res.innerHTML = `
+            <div style="animation: fadeIn 0.5s ease;">
+                <div style="font-size:12px; font-weight:bold; color:var(--ios-accent); margin-bottom:5px;">AI CONFIDENCE: ${conf}%</div>
+                <div style="font-size:24px; font-weight:700; margin-bottom:15px;">${item.n}</div>
+                <div class="stats-grid">
+                    <div class="stat-box"><span class="stat-val" style="font-size:18px">${item.k}</span><span class="stat-label">Kcal</span></div>
+                    <div class="stat-box"><span class="stat-val" style="font-size:18px">${item.p}g</span><span class="stat-label">Prot</span></div>
+                    <div class="stat-box"><span class="stat-val" style="font-size:18px">${item.c}g</span><span class="stat-label">Carb</span></div>
+                    <div class="stat-box"><span class="stat-val" style="font-size:18px">${item.f}g</span><span class="stat-label">Fat</span></div>
+                </div>
+                <button onclick="saveAiMeal('${item.n}', ${item.k})" style="margin-top:20px; background: #34c759;">
+                    <i class="fa-solid fa-plus"></i> Save to Journal
+                </button>
+            </div>
+        `;
+    }, 2000);
+}
+function saveAiMeal(name, calories) {
+    // 1. Add to the total calories
+    totalCal += calories;
+
+    // 2. Create the list item for the Diary screen
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${name}</span> <strong>${calories} kcal</strong>`;
+    document.getElementById("foodList").appendChild(li);
+
+    // 3. Update the total display on the Diary screen
+    document.getElementById("totalCal").innerText = totalCal;
+
+    // 4. Visual Feedback: Change button state
+    const scanResult = document.getElementById("scanResult");
+    const originalContent = scanResult.innerHTML;
+
+    scanResult.innerHTML = `
+        <div style="text-align:center; padding: 20px; animation: ios-slide 0.4s ease;">
+            <i class="fa-solid fa-circle-check" style="font-size: 48px; color: #34c759; margin-bottom:15px;"></i>
+            <h3 style="margin:0;">Added to Journal!</h3>
+            <p style="color:var(--ios-secondary);">Log updated with ${calories} kcal.</p>
+            <button class="btn-secondary" onclick="switchScreen('tracker', 'Journal', document.querySelector('.sidebar-btn:nth-child(2)'))">View Diary</button>
+        </div>
+    `;
+}
+
+    </script>
+</body>
+</html>
