@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NutriTrack AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* All your original CSS goes here */
+        :root {
+            --ios-bg: #f2f2f7;
+            --ios-card: rgba(255, 255, 255, 0.85);
+            --ios-accent: #007aff;
+            --ios-text: #1c1c1e;
+            --ios-secondary: #8e8e93;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --sidebar-width: 260px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        body { margin: 0; background-color: var(--ios-bg); color: var(--ios-text); display: flex; min-height: 100vh; overflow-x: hidden; }
+
+        /* ---------- DESKTOP SIDEBAR ---------- */
+        .sidebar {
+            width: var(--sidebar-width); background: var(--ios-card); backdrop-filter: blur(20px);
+            height: 100vh; position: fixed; left: 0; top: 0; display: none;
+            flex-direction: column; padding: 40px 20px; border-right: 1px solid rgba(120,120,128,0.2); z-index: 1000;
+        }
+        .sidebar h1 { font-size: 24px; margin-bottom: 40px; padding-left: 15px; font-weight: 800; }
+
+        /* Changed from button to anchor tag styling for Django URLs */
+        .sidebar-btn {
+            background: none; border: none; color: var(--ios-secondary); padding: 15px;
+            margin: 5px 0; border-radius: 12px; display: flex; align-items: center; gap: 15px;
+            font-size: 16px; font-weight: 500; cursor: pointer; transition: 0.2s; width: 100%; text-decoration: none;
+        }
+        .sidebar-btn.active { background: var(--ios-accent); color: white; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
+        .sidebar-btn:hover:not(.active) { background: rgba(120, 120, 128, 0.1); }
+
+        /* ---------- MAIN CONTENT ---------- */
+        .main-container { flex: 1; transition: margin-left 0.3s ease; width: 100%; }
+        header { padding: 60px 20px 20px; display: flex; justify-content: space-between; align-items: center; max-width: 1000px; margin: 0 auto; }
+        header h1 { font-size: 34px; font-weight: 700; margin: 0; letter-spacing: -1px; }
+        .app { padding: 0 20px 140px; max-width: 1000px; margin: 0 auto; width: 100%; }
+
+        /* ---------- CARDS ---------- */
+        .card {
+            background: var(--ios-card); backdrop-filter: blur(20px); border-radius: 24px;
+            padding: 24px; margin-bottom: 25px; box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h2 { font-size: 20px; margin-top: 0; font-weight: 600; }
+
+        input {
+            width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: none;
+            background: rgba(120, 120, 128, 0.12); color: var(--ios-text); font-size: 16px;
+        }
+        button {
+            width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--ios-accent);
+            color: white; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+        }
+        button:active { transform: scale(0.96); opacity: 0.9; }
+
+        /* ---------- MOBILE NAV ---------- */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around;
+            padding: 15px 0 35px; background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 100;
+        }
+        .nav-item { background: none; border: none; color: var(--ios-secondary); display: flex; flex-direction: column; align-items: center; font-size: 10px; cursor: pointer; padding: 0; width: auto; text-decoration: none; }
+        .nav-item i { font-size: 24px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--ios-accent); }
+
+        .desktop-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px; }
+        .stat-box { text-align: center; background: rgba(0,122,255,0.08); padding: 18px; border-radius: 18px; border: 1px solid rgba(0,122,255,0.1); }
+        .stat-val { display: block; font-size: 24px; font-weight: 800; color: var(--ios-accent); }
+        .stat-label { font-size: 11px; color: var(--ios-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        @media (min-width: 850px) {
+            .sidebar { display: flex; }
+            .bottom-nav { display: none; }
+            .main-container { margin-left: var(--sidebar-width); }
+            .desktop-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h1>Nutri<span style="color:var(--ios-accent)">Track</span></h1>
+        <a href="{% url 'home' %}" class="sidebar-btn {% if request.resolver_match.url_name == 'home' %}active{% endif %}"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="{% url 'diary' %}" class="sidebar-btn"><i class="fa-solid fa-utensils"></i> Diary</a>
+        <a href="#" class="sidebar-btn"><i class="fa-solid fa-chart-line"></i> Trends</a>
+        <a href="#" class="sidebar-btn"><i class="fa-solid fa-camera"></i> AI Scan</a>
+    </aside>
+
+    <div class="main-container">
+        <header>
+            <h1>{% block header_title %}Summary{% endblock %}</h1>
+        </header>
+
+        <div class="app">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="{% url 'diary' %}" class="nav-item"><i class="fa-solid fa-utensils"></i><span>Diary</span></a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-chart-line"></i><span>Trends</span></a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-camera"></i><span>Scan</span></a>
+    </nav>
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+{% extends 'tracker/base.html' %}
+
+{% block header_title %}Hi, Welcome To NutriTrack!{% endblock %}
+
+{% block content %}
+<style>
+    /* Pure CSS Gauge without JavaScript */
+    .gauge-wrapper { margin: 30px auto; text-align: center; }
+    .gauge {
+        width: 240px; height: 120px; margin: 0 auto; position: relative;
+        background: linear-gradient(to right, #f39c12 0%, #2ecc71 20%, #2ecc71 60%, #f1c40f 60%, #f1c40f 80%, #e74c3c 80%);
+        border-top-left-radius: 120px; border-top-right-radius: 120px;
+    }
+    .gauge-inner {
+        width: 170px; height: 85px; background: var(--ios-card);
+        border-top-left-radius: 85px; border-top-right-radius: 85px;
+        position: absolute; bottom: 0; left: 35px; display: flex;
+        align-items: flex-end; justify-content: center; padding-bottom: 10px;
+    }
+    .gauge-inner h3 { margin: 0; font-size: 28px; font-weight: 800; color: var(--ios-text); }
+
+    /* --- NEW ANIMATION LOGIC --- */
+    /* Django injects the final degree into the CSS keyframes */
+    @keyframes sweepNeedle {
+        0% { transform: rotate(-90deg); }
+        100% { transform: rotate({{ gauge_degree }}deg); }
+    }
+
+    .needle {
+        width: 4px; height: 100px; background: var(--ios-text);
+        position: absolute; bottom: 0; left: 118px; border-radius: 4px;
+        transform-origin: bottom center;
+
+        /* The final resting position */
+        transform: rotate({{ gauge_degree }}deg);
+
+        /* Triggers the animation on page load. 'forwards' keeps it at the end position */
+        animation: sweepNeedle 1.5s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+    }
+
+    .needle::after {
+        content: ''; width: 14px; height: 14px; background: var(--ios-text);
+        border-radius: 50%; position: absolute; bottom: -5px; left: -5px;
+    }
+    .advanced-metrics { list-style: none; padding: 0; margin-top: 20px; font-size: 15px; }
+    .advanced-metrics li { padding: 12px 0; border-bottom: 1px solid rgba(120, 120, 128, 0.15); display: flex; justify-content: space-between; align-items: center;}
+    .metrics-val { font-weight: 600; color: var(--ios-accent); text-align: right;}
+</style>
+
+<div class="desktop-grid">
+    <div class="card">
+        <h2>Health Profile</h2>
+        <form method="POST" action="{% url 'home' %}">
+            {% csrf_token %}
+            <input type="number" name="age" placeholder="Age" value="{{ profile.age|default_if_none:'' }}">
+            <input type="number" step="0.1" name="weight" placeholder="Weight (kg)" value="{{ profile.current_weight_kg|default_if_none:'' }}">
+            <input type="number" step="0.1" name="height" placeholder="Height (cm)" value="{{ profile.height_cm|default_if_none:'' }}">
+            <button type="submit">Update Metrics</button>
+        </form>
+
+        <div class="stats-grid" style="margin-top: 25px;">
+            <div class="stat-box">
+                <span class="stat-val">{% if profile and profile.current_weight_kg %}{{ daily_kcal }}{% else %}--{% endif %}</span>
+                <span class="stat-label">Maint. Kcal</span>
+            </div>
+
+            <div class="stat-box">
+                <span class="stat-val" style="{% if cal_adjustment_val == '-500' %}color: #e74c3c;{% elif cal_adjustment_val == '+500' %}color: #f39c12;{% endif %}">
+                    {% if profile %}{{ cal_adjustment_val }}{% else %}--{% endif %}
+                </span>
+                <span class="stat-label">{{ cal_adjustment_label }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Advanced Analysis</h2>
+
+        <div class="gauge-wrapper">
+            <h4 style="margin: 0 0 10px 0; color: var(--ios-secondary); text-transform: uppercase; font-size: 12px;">{{ bmi_category }}</h4>
+            <div class="gauge">
+                <div class="gauge-inner">
+                    <h3>{{ profile.calculate_bmi|default:"--" }}</h3>
+                </div>
+                <div class="needle"></div>
+            </div>
+        </div>
+
+        <ul class="advanced-metrics">
+            <li><span>Healthy BMI range:</span> <span class="metrics-val">18.5 - 24.9</span></li>
+
+            <li><span>Healthy weight range:</span>
+                <span class="metrics-val">
+                    {% if min_weight %}{{ min_weight }} kg - {{ max_weight }} kg{% else %}--{% endif %}
+                </span>
+            </li>
+
+            <li><span>Target adjustment:</span>
+                <span class="metrics-val" style="{% if bmi_category == 'Healthy Weight' %}color: #2ecc71;{% else %}color: #e74c3c;{% endif %}">
+                    {{ profile.get_weight_target|default:"--" }}
+                </span>
+            </li>
+
+            <li><span>Ponderal Index:</span>
+                <span class="metrics-val">
+                    {% if profile %}{{ profile.calculate_ponderal_index|default:"--" }} kg/m³{% else %}--{% endif %}
+                </span>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

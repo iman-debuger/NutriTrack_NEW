@@ -1,0 +1,37 @@
+{% extends 'tracker/base.html' %}
+
+{% block header_title %}Journal{% endblock %}
+
+{% block content %}
+<div class="desktop-grid">
+    <div class="card">
+        <h2>Log Nutrition</h2>
+        <form method="POST" action="{% url 'diary' %}">
+            {% csrf_token %}
+            <input type="text" name="food_name" placeholder="Food name (e.g., Idli, Dosa, Chicken)" required>
+            <input type="number" name="food_grams" placeholder="Amount (grams)" required>
+            <button type="submit">Log Meal</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Today's Journal</h2>
+        <ul>
+            {% for food in foods_today %}
+                <li>
+                    <span>
+                        {{ food.name }}
+                        <small style="color: var(--ios-secondary); font-size: 13px;">({{ food.grams }}g)</small>
+                    </span>
+                    <strong>{{ food.calories }} kcal</strong>
+                </li>
+            {% empty %}
+                <li style="color: var(--ios-secondary); justify-content: center; border: none;">
+                    No meals logged today yet.
+                </li>
+            {% endfor %}
+        </ul>
+        <h3 style="text-align: right;">Total: <span style="color:var(--ios-accent)">{{ total_calories }}</span> <small>kcal</small></h3>
+    </div>
+</div>
+{% endblock %}
