@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from .models import UserProfile, FoodLog, NutritionItem
 from django.utils import timezone
 from django.db.models import Sum
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 
 
 def home_view(request):
@@ -87,7 +89,11 @@ def home_view(request):
     # Render the template directly. Notice we removed the "redirect()" from the POST!
     return render(request, 'tracker/home.html', context)
 
+
 def diary_view(request):
+
+    context = {'searched_food': None, 'foods_today': [], 'total_calories': 0}
+
     if request.method == 'POST':
         food_name = request.POST.get('food_name')
         food_grams = request.POST.get('food_grams')
@@ -96,35 +102,176 @@ def diary_view(request):
             clean_name = food_name.strip()
             grams = int(food_grams)
 
-            # --- THE NEW DATABASE QUERY ---
             try:
-                # We use name__iexact to make the search case-insensitive
-                # (so "rice", "Rice", and "RICE" all find the same database entry)
                 nutrition_item = NutritionItem.objects.get(name__iexact=clean_name)
                 cal_per_100g = nutrition_item.calories_per_100g
             except NutritionItem.DoesNotExist:
-                # If the user types a food that isn't in your SQL database yet,
-                # we fallback to an estimated 100 kcal per 100g so the app doesn't crash.
                 cal_per_100g = 100
 
-                # THE MATH: (grams / 100) * calories per 100g
             calculated_calories = round((grams / 100) * cal_per_100g)
 
-            # Save the final meal to the FoodLog
-            FoodLog.objects.create(
-                name=food_name.title(),
-                grams=grams,
-                calories=calculated_calories
-            )
 
-        return redirect('diary')
+            if request.user.is_authenticated:
+                FoodLog.objects.create(
+                    user=request.user,
+                    name=food_name.title(),
+                    grams=grams,
+                    calories=calculated_calories
+                )
+                return redirect('diary')
 
+
+            else:
+                context['searched_food'] = {
+                    'name': food_name.title(),
+                    'grams': grams,
+                    'calories': calculated_calories
+                }
+
+
+    if request.user.is_authenticated:
+        today = timezone.now().date()
+        foods_today = FoodLog.objects.filter(user=request.user, date_logged__date=today).order_by('-date_logged')
+        context['total_calories'] = foods_today.aggregate(Sum('calories'))['calories__sum'] or 0
+        context['foods_today'] = foods_today
+
+    return render(request, 'tracker/diary.html', context)
+
+
+def profile_view(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    # 1. Get or create the user's permanent profile
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    # 2. Handle saving permanent metrics from the Profile page
+    if request.method == 'POST':
+        weight = request.POST.get('weight')
+        height = request.POST.get('height')
+        if weight and height:
+            profile.current_weight_kg = float(weight)
+            profile.height_cm = float(height)
+            profile.save()
+            return redirect('profile')
+
+    # 3. Calculate Daily & Monthly Calories
     today = timezone.now().date()
-    foods_today = FoodLog.objects.filter(date_logged__date=today).order_by('-date_logged')
-    total_calories = foods_today.aggregate(Sum('calories'))['calories__sum'] or 0
+    this_month = today.replace(day=1)
+
+    daily_logs = FoodLog.objects.filter(user=request.user, date_logged__date=today)
+    monthly_logs = FoodLog.objects.filter(user=request.user, date_logged__gte=this_month)
+
+    daily_total = daily_logs.aggregate(Sum('calories'))['calories__sum'] or 0
+    monthly_total = monthly_logs.aggregate(Sum('calories'))['calories__sum'] or 0
+
+    # 4. Determine Target Goal & Maintenance Kcal
+    target_text = "Save metrics"
+    target_color = "var(--ios-secondary)"
+    maint_kcal = None  # <--- NEW VARIABLE
+
+    if profile.current_weight_kg and profile.height_cm:
+        # Calculate Maintenance Kcal
+        maint_kcal = round(profile.current_weight_kg * 30)
+
+        bmi = profile.calculate_bmi()
+        if bmi < 18.5:
+            target_text = "Surplus (+500)"  # Shortened to fit the new grid
+            target_color = "#f39c12"
+        elif bmi > 24.9:
+            target_text = "Deficit (-500)"  # Shortened to fit the new grid
+            target_color = "#e74c3c"
+        else:
+            target_text = "Maintenance"
+            target_color = "#2ecc71"
 
     context = {
-        'foods_today': foods_today,
-        'total_calories': total_calories
+        'profile': profile,
+        'daily_total': daily_total,
+        'monthly_total': monthly_total,
+        'target_text': target_text,
+        'target_color': target_color,
+        'maint_kcal': maint_kcal,  # <--- PASS IT TO HTML
     }
-    return render(request, 'tracker/diary.html', context)
+    return render(request, 'tracker/profile.html', context)
+
+def analyze_food_view(request):
+    # Added 'error' to the context so we can show messages
+    context = {'result': None, 'error': None}
+
+    if request.method == 'POST':
+        # 1. If the user clicks "Save to Journal"
+        if 'save_ai_meal' in request.POST:
+            if request.user.is_authenticated:
+                FoodLog.objects.create(
+                    user=request.user,
+                    name=request.POST.get('meal_name'),
+                    grams=100, # Default estimate
+                    calories=int(request.POST.get('meal_calories'))
+                )
+                return redirect('diary')
+            else:
+                return redirect('login')
+
+        # 2. If the user is uploading an image for analysis
+        elif 'food_image' in request.FILES:
+            uploaded_file = request.FILES['food_image']
+            filename = uploaded_file.name
+
+            # MOCK AI LOGIC: Extract the food name from the file name
+            # Example: "Apple.jpg" -> "apple", "Chicken_Biryani.png" -> "chicken biryani"
+            recognized_name = filename.rsplit('.', 1)[0].lower().replace('_', ' ').replace('-', ' ')
+
+            # 3. Query the REAL SQL Database!
+            try:
+                # Find the exact food item in your NutritionItem table
+                real_food_data = NutritionItem.objects.get(name__iexact=recognized_name)
+
+                # Since our current DB only stores calories, we dynamically fake the macros for the UI
+                cal = real_food_data.calories_per_100g
+
+                context['result'] = {
+                    'name': real_food_data.name,
+                    'calories': real_food_data.calories_per_100g,
+                    'protein': int(real_food_data.protein),
+                    'carbs': int(real_food_data.carbs),
+                    'fat': int(real_food_data.fat),
+                    'fiber': real_food_data.fiber,
+                    'confidence': 98.5
+                }
+
+            except NutritionItem.DoesNotExist:
+                # If the filename doesn't match the database, return an error message!
+                context['error'] = f"Recognized Food is'{recognized_name.title()}', but it is not in your SQL database! Try naming your file exactly like a database item (e.g., 'Apple.jpg' or 'Chicken Biryani.png')."
+
+    return render(request, 'tracker/analyze.html', context)
+
+def login_view(request):
+    if request.method == 'POST':
+        u = request.POST.get('username')
+        p = request.POST.get('password')
+        user = authenticate(request, username=u, password=p)
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            return render(request, 'tracker/login.html', {'error': 'Invalid username or password'})
+    return render(request, 'tracker/login.html')
+
+
+def signup_view(request):
+    if request.method == 'POST':
+        u = request.POST.get('username')
+        p = request.POST.get('password')
+        if User.objects.filter(username=u).exists():
+            return render(request, 'tracker/signup.html', {'error': 'Username already exists'})
+
+        user = User.objects.create_user(username=u, password=p)
+        login(request, user)
+        return redirect('home')
+    return render(request, 'tracker/signup.html')
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('home')

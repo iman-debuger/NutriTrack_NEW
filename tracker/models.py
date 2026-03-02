@@ -1,7 +1,10 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
+
 
 class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     age = models.IntegerField(null=True, blank=True)
     height_cm = models.FloatField(null=True, blank=True)
     current_weight_kg = models.FloatField(null=True, blank=True)
@@ -45,11 +48,16 @@ class UserProfile(models.Model):
 class NutritionItem(models.Model):
     name = models.CharField(max_length=100, unique=True)
     calories_per_100g = models.IntegerField()
+    protein = models.FloatField(default=0)
+    carbs = models.FloatField(default=0)
+    fiber = models.FloatField(default=0)
+    fat = models.FloatField(default=0)
 
     def __str__(self):
         return f"{self.name} ({self.calories_per_100g} kcal/100g)"
 
-class FoodLog(models.Model):  # Fixed
+class FoodLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     grams = models.IntegerField(default=100)
     calories = models.IntegerField()

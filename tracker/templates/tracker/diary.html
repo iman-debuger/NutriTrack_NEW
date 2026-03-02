@@ -1,37 +1,49 @@
 {% extends 'tracker/base.html' %}
-
 {% block header_title %}Journal{% endblock %}
 
 {% block content %}
 <div class="desktop-grid">
     <div class="card">
-        <h2>Log Nutrition</h2>
+        <h2>{% if user.is_authenticated %}Log Nutrition{% else %}Calorie Calculator{% endif %}</h2>
+
         <form method="POST" action="{% url 'diary' %}">
             {% csrf_token %}
             <input type="text" name="food_name" placeholder="Food name (e.g., Idli, Dosa, Chicken)" required>
-            <input type="number" name="food_grams" placeholder="Amount (grams)" required>
-            <button type="submit">Log Meal</button>
+            <input type="number" name="food_grams" placeholder="Amount eaten (grams)" required>
+            <button type="submit">{% if user.is_authenticated %}Log Meal{% else %}Calculate{% endif %}</button>
         </form>
+
+        {% if not user.is_authenticated and searched_food %}
+            <div style="margin-top: 20px; padding: 15px; background: rgba(0,122,255,0.08); border-radius: 12px; text-align: center; border: 1px solid rgba(0,122,255,0.1);">
+                <h3 style="margin: 0; font-size: 28px; color: var(--ios-accent);">{{ searched_food.calories }} <small style="font-size: 16px;">kcal</small></h3>
+                <p style="margin: 5px 0 0 0; color: var(--ios-secondary); font-weight: 500;">in {{ searched_food.grams }}g of {{ searched_food.name }}</p>
+            </div>
+        {% endif %}
     </div>
 
     <div class="card">
         <h2>Today's Journal</h2>
-        <ul>
-            {% for food in foods_today %}
-                <li>
-                    <span>
-                        {{ food.name }}
-                        <small style="color: var(--ios-secondary); font-size: 13px;">({{ food.grams }}g)</small>
-                    </span>
-                    <strong>{{ food.calories }} kcal</strong>
-                </li>
-            {% empty %}
-                <li style="color: var(--ios-secondary); justify-content: center; border: none;">
-                    No meals logged today yet.
-                </li>
-            {% endfor %}
-        </ul>
-        <h3 style="text-align: right;">Total: <span style="color:var(--ios-accent)">{{ total_calories }}</span> <small>kcal</small></h3>
+
+        {% if user.is_authenticated %}
+            <ul>
+                {% for food in foods_today %}
+                    <li>
+                        <span>{{ food.name }} <small style="color: var(--ios-secondary);">({{ food.grams }}g)</small></span>
+                        <strong>{{ food.calories }} kcal</strong>
+                    </li>
+                {% empty %}
+                    <li style="color: var(--ios-secondary); justify-content: center; border: none;">No meals logged today yet.</li>
+                {% endfor %}
+            </ul>
+            <h3 style="text-align: right;">Total: <span style="color:var(--ios-accent)">{{ total_calories }}</span> <small>kcal</small></h3>
+
+        {% else %}
+            <div style="text-align: center; padding: 30px 0;">
+                <i class="fa-solid fa-lock" style="font-size: 36px; color: var(--ios-secondary); margin-bottom: 15px;"></i>
+                <p style="color: var(--ios-secondary); font-weight: 500;">Sign up or Log in to start tracking your daily meals and save your progress!</p>
+                <a href="{% url 'login' %}" style="display: inline-block; padding: 12px 24px; background: var(--ios-accent); color: white; text-decoration: none; border-radius: 12px; margin-top: 10px; font-weight: 600;">Log In to Track</a>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'tracker/base.html' %}
+{% block header_title %}Profile{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto; text-align: center;">
+    <div style="width: 80px; height: 80px; background: rgba(0,122,255,0.1); border-radius: 50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 20px;">
+        <i class="fa-solid fa-user" style="font-size:32px; color:var(--ios-accent);"></i>
+    </div>
+
+    <h2 style="font-size: 24px; margin-bottom: 5px;">{{ user.username|title }}</h2>
+    <p style="color: var(--ios-secondary); margin-bottom: 30px;">NutriTrack Member</p>
+
+    <div class="stats-grid" style="margin-bottom: 25px; text-align: left;">
+        <div class="stat-box">
+            <span class="stat-val">{{ daily_total }} <small style="font-size:14px; color:var(--ios-secondary);">kcal</small></span>
+            <span class="stat-label">Eaten Today</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-val">{{ monthly_total }} <small style="font-size:14px; color:var(--ios-secondary);">kcal</small></span>
+            <span class="stat-label">This Month</span>
+        </div>
+
+        <div class="stat-box">
+            <span class="stat-val">
+                {% if maint_kcal %}{{ maint_kcal }}{% else %}--{% endif %}
+                <small style="font-size:14px; color:var(--ios-secondary);">kcal</small>
+            </span>
+            <span class="stat-label">Maint. Kcal</span>
+        </div>
+
+        <div class="stat-box" style="background: rgba(120, 120, 128, 0.05); border: 1px solid rgba(120, 120, 128, 0.1);">
+            <span class="stat-val" style="color: {{ target_color }}; font-size: 20px;">{{ target_text }}</span>
+            <span class="stat-label">Goal Target</span>
+        </div>
+    </div>
+
+    <div style="background: rgba(120, 120, 128, 0.05); padding: 20px; border-radius: 16px; margin-bottom: 30px; text-align: left;">
+        <h3 style="margin-top: 0; font-size: 16px; color: var(--ios-text);">Permanent Body Metrics</h3>
+        <p style="font-size: 13px; color: var(--ios-secondary); margin-bottom: 15px;">Save your weight and height here to calculate your goal target. (The Home page remains a temporary calculator!)</p>
+
+        <form method="POST" action="{% url 'profile' %}" style="display: flex; gap: 10px;">
+            {% csrf_token %}
+            <input type="number" step="0.1" name="weight" placeholder="Weight (kg)" value="{{ profile.current_weight_kg|default_if_none:'' }}" required style="margin: 0;">
+            <input type="number" step="0.1" name="height" placeholder="Height (cm)" value="{{ profile.height_cm|default_if_none:'' }}" required style="margin: 0;">
+            <button type="submit" style="width: auto; padding: 0 20px; margin: 0;">Save</button>
+        </form>
+    </div>
+
+    <a href="{% url 'logout' %}" style="display: block; width: 100%; padding: 16px; border-radius: 14px; background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.2); font-weight: 600; font-size: 16px; text-decoration: none; transition: 0.2s;">
+        <i class="fa-solid fa-right-from-bracket" style="margin-right: 8px;"></i> Log Out
+    </a>
+</div>
+{% endblock %}

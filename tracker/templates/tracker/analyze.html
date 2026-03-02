@@ -1,0 +1,126 @@
+{% extends 'tracker/base.html' %}
+{% block header_title %}Analyze Food{% endblock %}
+
+{% block content %}
+<div class="card full-width" style="text-align: center; padding: 50px 20px;">
+
+    {% if not result %}
+        <div style="width: 80px; height: 80px; background: rgba(0,122,255,0.1); border-radius: 50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 20px;">
+            <i class="fa-solid fa-wand-magic-sparkles" style="font-size:32px; color:var(--ios-accent);"></i>
+        </div>
+        <h2>Vision Scanner</h2>
+        <p style="color:var(--ios-secondary); margin-bottom:25px;">Upload or drag a photo of your meal to identify calories instantly.</p>
+
+        {% if error %}
+            <div style="background: rgba(231, 76, 60, 0.1); border: 1px solid rgba(231, 76, 60, 0.3); color: #e74c3c; padding: 15px; border-radius: 12px; margin-bottom: 25px; text-align: left; font-size: 14px; font-weight: 500;">
+                <i class="fa-solid fa-triangle-exclamation" style="margin-right: 5px;"></i> {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" action="{% url 'analyze' %}" style="max-width: 320px; margin: 0 auto;">
+            {% csrf_token %}
+
+            <input type="file" id="fileInput" name="food_image" accept="image/*" required style="display: none;" onchange="previewImage({target: this})">
+
+            <div id="dropZone" onclick="document.getElementById('fileInput').click()" style="background: rgba(120, 120, 128, 0.05); border: 2px dashed rgba(120, 120, 128, 0.3); padding: 30px 15px; margin-bottom: 20px; border-radius: 16px; cursor: pointer; transition: all 0.2s ease;">
+
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 28px; color: var(--ios-accent); margin-bottom: 10px; pointer-events: none;"></i>
+                <p style="margin: 0; color: var(--ios-text); font-weight: 600; font-size: 16px; pointer-events: none;">Drag & drop or tap to choose</p>
+                <p style="margin: 5px 0 0 0; color: var(--ios-secondary); font-size: 12px; pointer-events: none;">Supports JPG, PNG</p>
+
+                <img id="imgPreview" src="" style="display: none; width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            </div>
+
+            <button type="submit" id="analyzeBtn" style="display: none;">
+                <i class="fa-solid fa-magnifying-glass" style="margin-right: 8px;"></i> Analyze Image
+            </button>
+        </form>
+
+    {% else %}
+        <div style="animation: ios-slide 0.5s ease; text-align: center;">
+            <div style="font-size:12px; font-weight:bold; color:var(--ios-accent); margin-bottom:5px;">
+                <i class="fa-solid fa-check-circle"></i> CONFIDENCE LEVEL: {{ result.confidence }}%
+            </div>
+            <div style="font-size:28px; font-weight:800; margin-bottom:20px;">{{ result.name }}</div>
+
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-box" style="grid-column: span 2; background: rgba(0, 122, 255, 0.08); border: 1px solid rgba(0, 122, 255, 0.2);">
+                    <span class="stat-val" style="font-size:24px; color: var(--ios-accent);">{{ result.calories }}</span>
+                    <span class="stat-label">Kcal</span>
+                </div>
+
+                <div class="stat-box"><span class="stat-val" style="font-size:20px">{{ result.protein }}g</span><span class="stat-label">Prot</span></div>
+                <div class="stat-box"><span class="stat-val" style="font-size:20px">{{ result.carbs }}g</span><span class="stat-label">Carb</span></div>
+                <div class="stat-box"><span class="stat-val" style="font-size:20px">{{ result.fat }}g</span><span class="stat-label">Fat</span></div>
+
+                <div class="stat-box"><span class="stat-val" style="font-size:20px">{{ result.fiber|default:"0" }}g</span><span class="stat-label">Fiber</span></div>
+            </div>
+
+            <form method="POST" action="{% url 'analyze' %}">
+                {% csrf_token %}
+                <input type="hidden" name="save_ai_meal" value="true">
+                <input type="hidden" name="meal_name" value="{{ result.name }}">
+                <input type="hidden" name="meal_calories" value="{{ result.calories }}">
+
+                <button type="submit" style="background: #34c759; max-width: 300px; margin: 0 auto; box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);">
+                    <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Save to Journal
+                </button>
+            </form>
+
+            <a href="{% url 'analyze' %}" style="display:inline-block; margin-top: 20px; color: var(--ios-secondary); text-decoration: none; font-weight: 500;">
+                <i class="fa-solid fa-rotate-right" style="margin-right: 5px;"></i> Scan Another Image
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const imgPreview = document.getElementById('imgPreview');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+
+    // 1. Handle normal click/tap selection
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e){
+                imgPreview.src = e.target.result;
+                imgPreview.style.display = 'block';
+                analyzeBtn.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // 2. Add visual glow when dragging a file over the box
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--ios-accent)';
+        dropZone.style.background = 'rgba(0,122,255,0.05)';
+    });
+
+    // 3. Remove glow if they drag away
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'rgba(120, 120, 128, 0.3)';
+        dropZone.style.background = 'rgba(120, 120, 128, 0.05)';
+    });
+
+    // 4. Catch the file when they finally drop it
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'rgba(120, 120, 128, 0.3)';
+        dropZone.style.background = 'rgba(120, 120, 128, 0.05)';
+
+        if (e.dataTransfer.files.length) {
+            // Assign the dropped file to the hidden input form
+            fileInput.files = e.dataTransfer.files;
+            // Trigger the preview function manually
+            previewImage({ target: fileInput });
+        }
+    });
+</script>
+{% endblock %}
