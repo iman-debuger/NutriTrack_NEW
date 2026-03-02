@@ -1,0 +1,46 @@
+{% extends 'tracker/base.html' %}
+{% block header_title %}Trends{% endblock %}
+
+{% block content %}
+<div class="card full-width" style="max-width: 800px; margin: 0 auto;">
+
+    <h2>7-Day Calorie History</h2>
+
+    {% if user.is_authenticated %}
+
+        <p style="color: var(--ios-secondary); margin-bottom: 30px;">
+            Your daily average intake is <b>{{ avg_calories }} kcal</b>.
+        </p>
+
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; height: 250px; border-bottom: 2px solid rgba(120, 120, 128, 0.2); padding-bottom: 10px; margin-top: 40px;">
+
+            {% for bar in chart_data %}
+                <div style="display: flex; flex-direction: column; align-items: center; width: 12%;">
+
+                    <span style="font-size: 11px; color: var(--ios-secondary); margin-bottom: 8px; font-weight: 600;">
+                        {% if bar.calories > 0 %}{{ bar.calories }}{% endif %}
+                    </span>
+
+                    <div style="width: 100%; max-width: 40px; height: {{ bar.height }}%; background: var(--ios-accent); border-radius: 6px 6px 0 0; min-height: 4px; transition: height 0.5s ease; box-shadow: 0 4px 10px rgba(0, 122, 255, 0.2);"></div>
+
+                    <span style="font-size: 12px; font-weight: 600; margin-top: 12px; color: var(--ios-text);">{{ bar.day_name }}</span>
+                </div>
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div style="text-align: center; padding: 50px 0;">
+            <div style="width: 80px; height: 80px; background: rgba(120, 120, 128, 0.1); border-radius: 50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 20px;">
+                <i class="fa-solid fa-lock" style="font-size: 32px; color: var(--ios-secondary);"></i>
+            </div>
+            <h3 style="margin-bottom: 10px;">Data Locked</h3>
+            <p style="color: var(--ios-secondary); font-weight: 500; margin-bottom: 20px;">Sign up or Log in to view your historical nutrition data and track your progress over time.</p>
+            <a href="{% url 'login' %}" style="display: inline-block; padding: 12px 24px; background: var(--ios-accent); color: white; text-decoration: none; border-radius: 12px; font-weight: 600;">Log In to Track</a>
+        </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

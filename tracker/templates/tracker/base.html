@@ -100,7 +100,7 @@
             <i class="fa-solid fa-utensils"></i> Diary
         </a>
 
-        <a href="#" class="sidebar-btn">
+        <a href="{% url 'trends' %}" class="sidebar-btn {% if request.resolver_match.url_name == 'trends' %}active{% endif %}">
             <i class="fa-solid fa-chart-line"></i> Trends
         </a>
 
@@ -144,7 +144,7 @@
             <i class="fa-solid fa-utensils"></i><span>Diary</span>
         </a>
 
-        <a href="#" class="nav-item">
+        <a href="{% url 'trends' %}" class="nav-item {% if request.resolver_match.url_name == 'trends' %}active{% endif %}">
             <i class="fa-solid fa-chart-line"></i><span>Trends</span>
         </a>
 

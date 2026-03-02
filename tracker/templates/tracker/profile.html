@@ -38,11 +38,16 @@
         <h3 style="margin-top: 0; font-size: 16px; color: var(--ios-text);">Permanent Body Metrics</h3>
         <p style="font-size: 13px; color: var(--ios-secondary); margin-bottom: 15px;">Save your weight and height here to calculate your goal target. (The Home page remains a temporary calculator!)</p>
 
-        <form method="POST" action="{% url 'profile' %}" style="display: flex; gap: 10px;">
+        <form method="POST" action="{% url 'profile' %}" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
             {% csrf_token %}
-            <input type="number" step="0.1" name="weight" placeholder="Weight (kg)" value="{{ profile.current_weight_kg|default_if_none:'' }}" required style="margin: 0;">
-            <input type="number" step="0.1" name="height" placeholder="Height (cm)" value="{{ profile.height_cm|default_if_none:'' }}" required style="margin: 0;">
-            <button type="submit" style="width: auto; padding: 0 20px; margin: 0;">Save</button>
+
+            <input type="number" name="age" placeholder="Age" value="{{ profile.age|default_if_none:'' }}" required style="margin: 0; width: 100%; padding: 14px 5px; text-align: center;">
+
+            <input type="number" step="0.1" name="weight" placeholder="kg" value="{{ profile.current_weight_kg|default_if_none:'' }}" required style="margin: 0; width: 100%; padding: 14px 5px; text-align: center;">
+
+            <input type="number" step="0.1" name="height" placeholder="cm" value="{{ profile.height_cm|default_if_none:'' }}" required style="margin: 0; width: 100%; padding: 14px 5px; text-align: center;">
+
+            <button type="submit" style="grid-column: span 3; margin: 0; width: 100%; padding: 14px;">Save Metrics</button>
         </form>
     </div>
 

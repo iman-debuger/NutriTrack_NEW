@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.db.models import Sum
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from datetime import timedelta
 
 
 def home_view(request):
@@ -147,9 +148,11 @@ def profile_view(request):
 
     # 2. Handle saving permanent metrics from the Profile page
     if request.method == 'POST':
+        age = request.POST.get('age')
         weight = request.POST.get('weight')
         height = request.POST.get('height')
-        if weight and height:
+        if age and weight and height:
+            profile.age = int(age)
             profile.current_weight_kg = float(weight)
             profile.height_cm = float(height)
             profile.save()
@@ -245,6 +248,55 @@ def analyze_food_view(request):
                 context['error'] = f"Recognized Food is'{recognized_name.title()}', but it is not in your SQL database! Try naming your file exactly like a database item (e.g., 'Apple.jpg' or 'Chicken Biryani.png')."
 
     return render(request, 'tracker/analyze.html', context)
+
+def trends_view(request):
+    context = {}
+
+    if request.user.is_authenticated:
+        # 1. Figure out the dates for the last 7 days
+        today = timezone.now().date()
+        last_7_days = [today - timedelta(days=i) for i in range(6, -1, -1)]
+
+        # 2. Grab all food logged by this user in the last 7 days
+        logs = FoodLog.objects.filter(
+            user=request.user,
+            date_logged__date__gte=last_7_days[0],
+            date_logged__date__lte=today
+        )
+
+        # 3. Sum up the calories for each specific day
+        daily_totals = {}
+        for log in logs:
+            log_date = log.date_logged.date()
+            daily_totals[log_date] = daily_totals.get(log_date, 0) + log.calories
+
+        # 4. PURE PYTHON GRAPH CALCULATION:
+        # We figure out the highest calorie day to scale the CSS bar heights properly!
+        chart_data = []
+        max_calories = 2500  # Our default ceiling
+
+        if daily_totals:
+            actual_max = max(daily_totals.values())
+            if actual_max > max_calories:
+                max_calories = actual_max
+
+        # 5. Build the list of data to send to the HTML template
+        for day in last_7_days:
+            total = daily_totals.get(day, 0)
+
+            # Calculate how tall the CSS bar should be (0% to 100%)
+            height_percentage = (total / max_calories) * 100 if max_calories > 0 else 0
+
+            chart_data.append({
+                'day_name': day.strftime('%a'),  # e.g., "Mon", "Tue"
+                'calories': total,
+                'height': round(height_percentage)
+            })
+
+        context['chart_data'] = chart_data
+        context['avg_calories'] = sum(daily_totals.values()) // 7 if daily_totals else 0
+
+    return render(request, 'tracker/trends.html', context)
 
 def login_view(request):
     if request.method == 'POST':
