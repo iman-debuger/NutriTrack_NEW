@@ -2,6 +2,10 @@
 {% load static %}
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NutriTrack AI</title>
+
     <link rel="manifest" href="{% static 'tracker/manifest.json' %}">
     <meta name="theme-color" content="#B0D4E3">
     <meta name="mobile-web-app-capable" content="yes">
@@ -9,24 +13,17 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="NutriTrack">
 
-    <link rel="manifest" href="{% static 'manifest.json' %}">
-
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#007aff">
-
-<script>
-  // Register the service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register("{% static 'sw.js' %}");
-  }
-</script>
-
     <link rel="apple-touch-icon" href="{% static 'tracker/logo.png' %}">
     <link rel="icon" sizes="192x192" href="{% static 'tracker/logo.png' %}">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NutriTrack AI</title>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register("/sw.js")
+        .then(() => console.log("Service Worker Registered Successfully!"))
+        .catch(err => console.error("SW Failed:", err));
+      }
+    </script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* All your original CSS goes here */

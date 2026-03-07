@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import TemplateView
 from . import views
 
 urlpatterns = [
@@ -11,4 +12,5 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),
+    path('sw.js', TemplateView.as_view(template_name='tracker/sw.js', content_type='application/javascript')),
 ]
