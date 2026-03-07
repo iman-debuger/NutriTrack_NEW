@@ -3,6 +3,7 @@
 {% block header_title %}Hi, Welcome To NutriTrack!{% endblock %}
 
 {% block content %}
+
 <style>
     /* Pure CSS Gauge without JavaScript */
     .gauge-wrapper { margin: 30px auto; text-align: center; }
@@ -45,6 +46,16 @@
     .advanced-metrics { list-style: none; padding: 0; margin-top: 20px; font-size: 15px; }
     .advanced-metrics li { padding: 12px 0; border-bottom: 1px solid rgba(120, 120, 128, 0.15); display: flex; justify-content: space-between; align-items: center;}
     .metrics-val { font-weight: 600; color: var(--ios-accent); text-align: right;}
+
+    @keyframes sweepNeedle {
+    from { transform: rotate(-90deg); }
+    to { transform: rotate(var(--target-angle)); }
+}
+.needle {
+    /* Assume your inline style passes the target angle as a CSS variable */
+    transform-origin: bottom center;
+    animation: sweepNeedle 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
 </style>
 
 <div class="desktop-grid">

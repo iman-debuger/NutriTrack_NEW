@@ -2,6 +2,17 @@
 {% block header_title %}Analyze Food{% endblock %}
 
 {% block content %}
+<style>
+    @keyframes pulseBox {
+        0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.2); }
+        70% { box-shadow: 0 0 0 15px rgba(0, 122, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
+    }
+    #dropZone:hover {
+        animation: pulseBox 1.5s infinite;
+        transform: translateY(-2px);
+    }
+</style>
 <div class="card full-width" style="text-align: center; padding: 50px 20px;">
 
     {% if not result %}
@@ -31,7 +42,7 @@
                 <img id="imgPreview" src="" style="display: none; width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
             </div>
 
-            <button type="submit" id="analyzeBtn" style="display: none;">
+            <button type="submit" id="analyzeBtn" style="display: none;" onclick="this.innerHTML='<i class=\'fa-solid fa-circle-notch fa-spin\' style=\'margin-right:8px;\'></i> Scanning...'; this.style.opacity='0.8';">
                 <i class="fa-solid fa-magnifying-glass" style="margin-right: 8px;"></i> Analyze Image
             </button>
         </form>
