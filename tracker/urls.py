@@ -1,6 +1,9 @@
 from django.urls import path
 from django.views.generic import TemplateView
+from django.views.static import serve
+from django.conf import settings
 from . import views
+import os
 
 urlpatterns = [
     # When someone goes to the base URL of the app, run home_view
