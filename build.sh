@@ -11,13 +11,18 @@ mkdir -p staticfiles
 echo "=== Collecting static files ==="
 python manage.py collectstatic --no-input --clear --verbosity 2
 
-echo "=== Checking database connection ==="
-python manage.py check --database default
+echo "=== Waiting for database to be ready ==="
+sleep 5
 
-echo "=== Running migrations ==="
-python manage.py migrate --verbosity 2
+echo "=== Running migrations (attempt 1) ==="
+python manage.py migrate --verbosity 2 || {
+    echo "Migration failed, waiting 10 seconds and retrying..."
+    sleep 10
+    echo "=== Running migrations (attempt 2) ==="
+    python manage.py migrate --verbosity 2
+}
 
-echo "=== Listing migrations ==="
+echo "=== Listing applied migrations ==="
 python manage.py showmigrations
 
 echo "=== Build completed successfully! ==="
