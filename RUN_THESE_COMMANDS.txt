@@ -1,0 +1,50 @@
+═══════════════════════════════════════════════════════════════
+  RUN THESE COMMANDS IN RENDER SHELL
+═══════════════════════════════════════════════════════════════
+
+Go to: https://dashboard.render.com
+Click: Your "nutritrack-new" web service
+Click: "Shell" tab (left sidebar)
+Wait: For shell to connect (10-20 seconds)
+
+Then copy and paste these commands ONE BY ONE:
+
+═══════════════════════════════════════════════════════════════
+COMMAND 1: Run Migrations
+═══════════════════════════════════════════════════════════════
+
+python manage.py migrate
+
+(Wait for it to complete - you'll see "OK" messages)
+
+═══════════════════════════════════════════════════════════════
+COMMAND 2: Create Admin User
+═══════════════════════════════════════════════════════════════
+
+python manage.py createsuperuser
+
+Then enter:
+- Username: admin
+- Email: (just press Enter)
+- Password: admin123 (or your choice)
+- Password (again): admin123
+
+═══════════════════════════════════════════════════════════════
+COMMAND 3: Verify Everything
+═══════════════════════════════════════════════════════════════
+
+python manage.py check
+
+(Should say "System check identified no issues")
+
+═══════════════════════════════════════════════════════════════
+DONE! Now test your app:
+═══════════════════════════════════════════════════════════════
+
+1. Go to: https://nutritrack-new.onrender.com/signup/
+2. Create a test account
+3. Should work perfectly! ✅
+
+═══════════════════════════════════════════════════════════════
+
+That's it! Your database is now set up and your app works!

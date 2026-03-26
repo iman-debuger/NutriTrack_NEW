@@ -313,14 +313,24 @@ def login_view(request):
 
 def signup_view(request):
     if request.method == 'POST':
-        u = request.POST.get('username')
-        p = request.POST.get('password')
-        if User.objects.filter(username=u).exists():
-            return render(request, 'tracker/signup.html', {'error': 'Username already exists'})
+        try:
+            u = request.POST.get('username')
+            p = request.POST.get('password')
+            
+            # Validate inputs
+            if not u or not p:
+                return render(request, 'tracker/signup.html', {'error': 'Username and password are required'})
+            
+            if User.objects.filter(username=u).exists():
+                return render(request, 'tracker/signup.html', {'error': 'Username already exists'})
 
-        user = User.objects.create_user(username=u, password=p)
-        login(request, user)
-        return redirect('home')
+            user = User.objects.create_user(username=u, password=p)
+            login(request, user)
+            return redirect('home')
+        except Exception as e:
+            # Log the error for debugging
+            print(f"Signup error: {str(e)}")
+            return render(request, 'tracker/signup.html', {'error': 'An error occurred. Please try again.'})
     return render(request, 'tracker/signup.html')
 
 

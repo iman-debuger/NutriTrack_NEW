@@ -1,6 +1,3 @@
-# Render configuration for NutriTrack
-# Database already exists, only deploying web service
-
 services:
   - type: web
     name: nutritrack
@@ -15,6 +12,8 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
-        value: False
+        value: True
+      - key: RENDER
+        value: true
       - key: RENDER_EXTERNAL_HOSTNAME
-        sync: false
+        value: nutritrack-new.onrender.com
