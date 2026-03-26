@@ -128,9 +128,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'tracker', 'static'),
 ]
 
-# Simplified static files configuration for Render
-if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# WhiteNoise configuration - use simple storage to avoid manifest issues
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

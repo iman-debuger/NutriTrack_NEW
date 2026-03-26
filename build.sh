@@ -4,8 +4,15 @@ set -o errexit
 
 pip install -r requirements.txt
 
-# Create staticfiles directory if it doesn't exist
+# Create staticfiles directory
 mkdir -p staticfiles
 
-python manage.py collectstatic --no-input --clear
+# Collect static files with verbose output
+echo "Collecting static files..."
+python manage.py collectstatic --no-input --clear --verbosity 2
+
+# Run migrations
+echo "Running migrations..."
 python manage.py migrate
+
+echo "Build completed successfully!"
