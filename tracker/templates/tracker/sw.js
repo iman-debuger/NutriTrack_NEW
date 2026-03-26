@@ -1,21 +1,16 @@
-// Service Worker for NutriTrack PWA
-const CACHE_NAME = 'nutritrack-v1';
-const urlsToCache = [
-  '/',
-];
+// Service Worker for NutriTrack PWA - DISABLED
+// This service worker is intentionally empty to unregister any previous versions
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-      .catch(err => console.log('Cache install failed:', err))
-  );
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-      .catch(err => fetch(event.request))
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => caches.delete(cacheName))
+      );
+    }).then(() => self.clients.claim())
   );
 });

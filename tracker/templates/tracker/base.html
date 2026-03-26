@@ -14,16 +14,22 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="NutriTrack">
 
-    <!-- Service Worker - temporarily disabled for deployment -->
-    <!--
+    <!-- Unregister any existing Service Workers -->
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register("/sw.js")
-        .then(() => console.log("Service Worker Registered Successfully!"))
-        .catch(err => console.error("SW Failed:", err));
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+          }
+        });
+        // Clear all caches
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            for (let name of names) caches.delete(name);
+          });
+        }
       }
     </script>
-    -->
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
