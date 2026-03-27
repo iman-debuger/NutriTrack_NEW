@@ -6,8 +6,10 @@ from . import views
 import os
 
 urlpatterns = [
-    # When someone goes to the base URL of the app, run home_view
-    path('', views.home_view, name='home'),
+    # Landing page for non-authenticated users
+    path('', views.landing_view, name='landing'),
+    # Dashboard for authenticated users
+    path('dashboard/', views.home_view, name='home'),
     path('diary/', views.diary_view, name='diary'),
     path('profile/', views.profile_view, name='profile'),
     path('analyze/', views.analyze_food_view, name='analyze'),

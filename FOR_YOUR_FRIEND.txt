@@ -1,0 +1,64 @@
+═══════════════════════════════════════════════════════════════
+  QUICK FIX FOR GIT ERROR - RUN THESE COMMANDS
+═══════════════════════════════════════════════════════════════
+
+Hey! If you're seeing a Git merge error, follow these steps:
+
+STEP 1: Open Terminal/Command Prompt in the project folder
+
+STEP 2: Run these commands ONE BY ONE:
+
+═══════════════════════════════════════════════════════════════
+
+git stash
+
+git pull origin main
+
+═══════════════════════════════════════════════════════════════
+
+That's it! The error should be fixed.
+
+═══════════════════════════════════════════════════════════════
+  AFTER PULLING, SETUP THE PROJECT:
+═══════════════════════════════════════════════════════════════
+
+STEP 3: Install dependencies
+
+pip install -r requirements.txt
+
+STEP 4: Run migrations
+
+python manage.py migrate
+
+STEP 5: Start the server
+
+python manage.py runserver
+
+STEP 6: Open browser and visit:
+
+http://127.0.0.1:8000/
+
+═══════════════════════════════════════════════════════════════
+
+✅ DONE! Your project should now work perfectly!
+
+═══════════════════════════════════════════════════════════════
+  IF YOU STILL HAVE ISSUES:
+═══════════════════════════════════════════════════════════════
+
+Try this (WARNING: This will delete your local changes):
+
+git fetch origin
+git reset --hard origin/main
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+
+═══════════════════════════════════════════════════════════════
+
+Need more help? Check these files:
+- FIX_GIT_ERROR.md
+- SETUP_FOR_DEVELOPERS.md
+- README.md
+
+═══════════════════════════════════════════════════════════════

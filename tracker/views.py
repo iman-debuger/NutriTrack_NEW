@@ -7,6 +7,13 @@ from django.contrib.auth.models import User
 from datetime import timedelta
 
 
+def landing_view(request):
+    """Landing page for non-authenticated users"""
+    if request.user.is_authenticated:
+        return redirect('home')
+    return render(request, 'tracker/landing.html')
+
+
 def home_view(request):
 
     context = {
