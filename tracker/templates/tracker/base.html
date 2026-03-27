@@ -157,7 +157,7 @@ button:hover {
         <h1>Nutri<span style="color:var(--ios-accent)">Track</span></h1>
 
         <a href="{% url 'home' %}" class="sidebar-btn {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-            <i class="fa-solid fa-house"></i> Home
+            <i class="fa-solid fa-house"></i> Dashboard
         </a>
 
         <a href="{% url 'diary' %}" class="sidebar-btn {% if request.resolver_match.url_name == 'diary' %}active{% endif %}">
@@ -180,6 +180,9 @@ button:hover {
             </div>
             <a href="{% url 'profile' %}" class="sidebar-btn {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
                 <i class="fa-solid fa-user"></i> Profile
+            </a>
+            <a href="{% url 'logout' %}" class="sidebar-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
             </a>
         {% else %}
             <a href="{% url 'login' %}" class="sidebar-btn {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'signup' %}active{% endif %}">
