@@ -22,6 +22,9 @@ python manage.py migrate --verbosity 2 || {
     python manage.py migrate --verbosity 2
 }
 
+echo "=== Populating food database ==="
+python manage.py populate_food_data || echo "Food data population failed (may already exist)"
+
 echo "=== Listing applied migrations ==="
 python manage.py showmigrations
 

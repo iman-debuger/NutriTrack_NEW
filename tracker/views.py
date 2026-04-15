@@ -5,6 +5,21 @@ from django.db.models import Sum
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from datetime import timedelta
+from django.http import FileResponse, Http404
+import os
+from django.conf import settings
+
+
+def download_windows_app(request):
+    """Download Windows .exe file"""
+    file_path = os.path.join(settings.BASE_DIR, 'build', 'NutriTrack', 'NutriTrack.exe')
+    
+    if os.path.exists(file_path):
+        response = FileResponse(open(file_path, 'rb'), content_type='application/octet-stream')
+        response['Content-Disposition'] = 'attachment; filename="NutriTrack.exe"'
+        return response
+    else:
+        raise Http404("File not found")
 
 
 def landing_view(request):

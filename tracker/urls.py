@@ -18,4 +18,6 @@ urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),
     path('sw.js', TemplateView.as_view(template_name='tracker/sw.js', content_type='application/javascript')),
+    # Download Windows app
+    path('download/windows/', views.download_windows_app, name='download_windows'),
 ]
