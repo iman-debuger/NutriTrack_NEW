@@ -25,6 +25,12 @@ python manage.py migrate --verbosity 2 || {
 echo "=== Populating food database ==="
 python manage.py populate_food_data || echo "Food data population failed (may already exist)"
 
+echo "=== Creating admin superuser ==="
+python manage.py create_superuser || echo "Superuser creation failed (may already exist)"
+
+echo "=== Making faisalman user admin ==="
+python manage.py make_user_admin faisalman || echo "User faisalman not found (will be created on signup)"
+
 echo "=== Listing applied migrations ==="
 python manage.py showmigrations
 
